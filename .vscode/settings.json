@@ -1,0 +1,17 @@
+{
+    "sqltools.connections": [
+        {
+            "pgOptions": {
+                "ssl": {
+                    "rejectUnauthorized": true
+                }
+            },
+            "ssh": "Disabled",
+            "previewLimit": 50,
+            "server": "localhost",
+            "driver": "PostgreSQL",
+            "connectString": "postgresql://comicbook-bookshelf_owner:npg_iY4rSgVp0evE@ep-super-violet-b5hzqru3-pooler.c-7.us-east-2.aws.neon.tech/comicbook-bookshelf?sslmode=require&channel_binding=require",
+            "name": "Comicbook bookshelf"
+        }
+    ]
+}

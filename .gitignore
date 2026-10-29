@@ -3,3 +3,6 @@
 # Server folder
 server/node_modules/
 server/.env
+
+# Client folder
+client/node_modules/

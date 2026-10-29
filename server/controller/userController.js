@@ -6,11 +6,13 @@ import {
   update,
 } from '../models/userModel.js';
 
+// GET /api/v1/users
 export async function getUsers(_req, res) {
   const users = await findAll();
   res.json(users);
 }
 
+// GET /api/v1/users/:id
 export async function getUserById(req, res) {
   const id = getUserId(req, res);
   if (id === null) return;
@@ -24,6 +26,7 @@ export async function getUserById(req, res) {
   return res.json(user);
 }
 
+// POST /api/v1/users
 export async function createUser(req, res) {
   const { name, email, passwordHash } = req.body;
 
@@ -37,6 +40,7 @@ export async function createUser(req, res) {
   return res.status(201).json(user);
 }
 
+// PATCH /api/v1/users/:id
 export async function updateUser(req, res) {
   const id = getUserId(req, res);
   if (id === null) return;
@@ -60,6 +64,7 @@ export async function updateUser(req, res) {
   return res.json(user);
 }
 
+// DELETE /api/v1/users/:id
 export async function deleteUser(req, res) {
   const id = getUserId(req, res);
   if (id === null) return;

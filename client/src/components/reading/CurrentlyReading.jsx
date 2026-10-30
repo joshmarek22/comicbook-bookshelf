@@ -3,12 +3,11 @@ import ReadingCard from './ReadingCard'
 
 function CurrentlyReading() {
   return (
-    <section className="section currently-reading">
-      <div className="section-heading">
-        <h1>CURRENTLY READING</h1>
-        <button className="primary-button">+ Log an issue</button>
+    <section>
+      <div className="flex items-center justify-between">
+        <h1 className="mb-4 text-[13px] tracking-[1px]">CURRENTLY READING</h1>
       </div>
-      <div className="reading-grid">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         {currentlyReading.map(([detail, progress], index) => (
           <ReadingCard key={detail} index={index} detail={detail} progress={progress} />
         ))}

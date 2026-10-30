@@ -5,8 +5,8 @@ function PlaceholderPage() {
   return (
     <>
       <Header />
-      <main className="placeholder-page">
-        <h1>Coming soon</h1>
+      <main className="px-8 py-12">
+        <h1 className="mb-2 text-[28px]">Coming soon</h1>
         <p>This route is ready for the next Panelhaus feature.</p>
         <Link to="/">Back to dashboard</Link>
       </main>

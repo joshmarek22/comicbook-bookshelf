@@ -10,7 +10,7 @@ function Header() {
         <NavLink className={({ isActive }) => isActive ? 'underline' : 'no-underline'} to="/lists">Lists</NavLink>
         <NavLink className={({ isActive }) => isActive ? 'underline' : 'no-underline'} to="/reading-orders">Reading orders</NavLink>
       </nav>
-      <button className="h-9 w-9 rounded-full border border-[var(--line)] bg-[#444] text-[var(--ink)]" aria-label="Open profile">J</button>
+      <Link className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--line)] bg-[#444] text-[var(--ink)] no-underline" aria-label="Open profile" to="/login">J</Link>
     </header>
   )
 }

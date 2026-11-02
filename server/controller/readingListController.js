@@ -30,8 +30,12 @@ export async function addReadingListItem(req, res) {
   const userId = getPositiveInteger(req.params.userId, res, 'User id');
   if (userId === null) return;
 
-  const marvelComicId = getPositiveInteger(req.body.marvelComicId, res, 'marvelComicId');
-  if (marvelComicId === null) return;
+  const comicVineComicId = getPositiveInteger(
+    req.body.comicVineComicId,
+    res,
+    'comicVineComicId',
+  );
+  if (comicVineComicId === null) return;
 
   const { title, notes } = req.body;
   const status = req.body.status === 'completed' ? 'finished' : (req.body.status ?? 'want_to_read');
@@ -49,7 +53,7 @@ export async function addReadingListItem(req, res) {
   }
 
   const item = await addItem(userId, {
-    marvelComicId,
+    comicVineComicId,
     title: title?.trim(),
     status,
     notes,
@@ -58,13 +62,17 @@ export async function addReadingListItem(req, res) {
   return res.status(201).json(item);
 }
 
-// PATCH /api/v1/users/:userId/reading-list/:marvelComicId
+// PATCH /api/v1/users/:userId/reading-list/:comicVineComicId
 export async function changeReadingListStatus(req, res) {
   const userId = getPositiveInteger(req.params.userId, res, 'User id');
   if (userId === null) return;
 
-  const marvelComicId = getPositiveInteger(req.params.marvelComicId, res, 'Marvel comic id');
-  if (marvelComicId === null) return;
+  const comicVineComicId = getPositiveInteger(
+    req.params.comicVineComicId,
+    res,
+    'Comic Vine comic id',
+  );
+  if (comicVineComicId === null) return;
 
   const status = req.body.status === 'completed' ? 'finished' : req.body.status;
   if (!STATUSES.has(status)) {
@@ -73,21 +81,25 @@ export async function changeReadingListStatus(req, res) {
     });
   }
 
-  const item = await updateStatus(userId, marvelComicId, status);
+  const item = await updateStatus(userId, comicVineComicId, status);
   if (!item) return res.status(404).json({ error: 'Reading-list item not found' });
 
   return res.json(item);
 }
 
-// DELETE /api/v1/users/:userId/reading-list/:marvelComicId
+// DELETE /api/v1/users/:userId/reading-list/:comicVineComicId
 export async function deleteReadingListItem(req, res) {
   const userId = getPositiveInteger(req.params.userId, res, 'User id');
   if (userId === null) return;
 
-  const marvelComicId = getPositiveInteger(req.params.marvelComicId, res, 'Marvel comic id');
-  if (marvelComicId === null) return;
+  const comicVineComicId = getPositiveInteger(
+    req.params.comicVineComicId,
+    res,
+    'Comic Vine comic id',
+  );
+  if (comicVineComicId === null) return;
 
-  const deleted = await removeItem(userId, marvelComicId);
+  const deleted = await removeItem(userId, comicVineComicId);
   if (!deleted) return res.status(404).json({ error: 'Reading-list item not found' });
 
   return res.status(204).send();

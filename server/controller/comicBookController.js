@@ -1,4 +1,4 @@
-import { getComicById, searchComics } from '../services/marvelService.js';
+import { getComicById, searchComics } from '../services/comicVineService.js';
 
 export async function listComics(req, res) {
   const search = getSearch(req.query.search);

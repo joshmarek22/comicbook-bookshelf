@@ -6,7 +6,3 @@ server/.env
 
 # Client folder
 client/node_modules/
-
-
-#temp
-server/.env.example

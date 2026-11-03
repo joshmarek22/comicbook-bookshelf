@@ -7,7 +7,7 @@ export async function searchComics({ search, limit, offset }) {
   const issues = await Promise.all(
     matchingVolumes.slice(0, 12).map(({ id }) => requestComicVine('issues', {
       filter: `volume:${id}`,
-      limit: 3,
+      limit: 10,
       sort: 'date_last_updated:desc',
     })),
   );

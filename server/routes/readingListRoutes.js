@@ -1,5 +1,6 @@
 import express from 'express';
 
+import { requireAuth } from '../controller/authController.js';
 import {
   addReadingListItem,
   changeReadingListStatus,
@@ -8,6 +9,7 @@ import {
 } from '../controller/readingListController.js';
 
 const router = express.Router({ mergeParams: true });
+router.use(requireAuth);
 
 // GET /api/v1/users/:userId/reading-list
 router.get('/', getReadingList);

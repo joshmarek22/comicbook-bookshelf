@@ -1,5 +1,6 @@
 import express from 'express';
 
+import { requireAuth } from '../controller/authController.js';
 import {
   createUser,
   deleteUser,
@@ -9,6 +10,7 @@ import {
 } from '../controller/userController.js';
 
 const router = express.Router();
+router.use(requireAuth);
 
 // GET /api/v1/users
 router.get('/', getUsers);

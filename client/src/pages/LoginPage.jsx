@@ -1,6 +1,38 @@
-import { Link } from 'react-router-dom'
+import { useState } from 'react'
+import { Link, useLocation } from 'react-router-dom'
 
 function LoginPage() {
+  const location = useLocation()
+  const [error, setError] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  async function submitLogin(event) {
+    event.preventDefault()
+    setError('')
+    setIsSubmitting(true)
+
+    try {
+      const formData = new FormData(event.currentTarget)
+      const response = await fetch('/api/v1/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          email: formData.get('email'),
+          password: formData.get('password'),
+        }),
+      })
+
+      const payload = await response.json()
+      if (!response.ok) throw new Error(payload.error || 'Unable to sign in')
+      window.location.replace(location.state?.from || '/')
+    } catch (requestError) {
+      setError(requestError.message)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
   return (
     <main className="flex min-h-screen items-center justify-center px-5 py-10">
       <section className="w-full max-w-[440px] border border-[var(--line)] bg-[#333] p-6 sm:p-8">
@@ -10,7 +42,7 @@ function LoginPage() {
         <h1 className="mt-10 mb-2 text-[28px]">Welcome back</h1>
         <p className="mb-8 text-[var(--muted)]">Sign in to manage your comic book shelf.</p>
 
-        <form className="grid gap-5">
+        <form className="grid gap-5" onSubmit={submitLogin}>
           <label className="grid gap-2 text-sm" htmlFor="email">
             Email
             <input
@@ -43,11 +75,13 @@ function LoginPage() {
             <a className="underline" href="#forgot-password">Forgot password?</a>
           </div>
 
+          {error && <p className="m-0 text-sm text-red-300" role="alert">{error}</p>}
           <button
             className="h-11 border border-[var(--ink)] bg-[var(--ink)] font-bold text-[#292929] hover:bg-white"
+            disabled={isSubmitting}
             type="submit"
           >
-            Sign in
+            {isSubmitting ? 'Signing in...' : 'Sign in'}
           </button>
         </form>
 

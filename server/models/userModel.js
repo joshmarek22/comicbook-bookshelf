@@ -14,6 +14,16 @@ import pool from '../config/database.js';
 
 const USER_COLUMNS = 'id, email, name, created_at, updated_at';
 
+export async function findByEmail(email) {
+  const { rows } = await pool.query(`
+    SELECT id, email, name, password_hash, created_at, updated_at
+    FROM users
+    WHERE lower(email) = lower($1)
+  `, [email]);
+
+  return rows[0] ?? null;
+}
+
 export async function findAll() {
   const { rows } = await pool.query(`
     SELECT ${USER_COLUMNS}

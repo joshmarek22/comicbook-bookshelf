@@ -1,5 +1,6 @@
 import express from 'express';
 
+import authRoutes from './routes/authRoutes.js';
 import comicBookRoutes from './routes/comicBookRoutes.js';
 import errorHandler from './middleware/errorHandler.js';
 import readingListRoutes from './routes/readingListRoutes.js';
@@ -9,6 +10,7 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 app.use(express.json());
+app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/comics', comicBookRoutes);
 app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/users/:userId/reading-list', readingListRoutes);

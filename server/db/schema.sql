@@ -128,7 +128,7 @@ EXECUTE FUNCTION set_updated_at();
 
 INSERT INTO users (email, password_hash, name)
 VALUES
-    ('peter.parker@example.com', 'test-password-hash-1', 'Peter Parker'),
-    ('kamala.khan@example.com', 'test-password-hash-2', 'Kamala Khan'),
-    ('steve.rogers@example.com', 'test-password-hash-3', 'Steve Rogers')
+    ('peter.parker@example.com', '$2b$12$Nn/GztH7.OuwNzmELVeMPeAPp4FkwQ9J2qTH1kzB14vt.z2SOjMTm', 'Peter Parker'),
+    ('kamala.khan@example.com', '$2b$12$ZC8APcgNN66ph85pB32GY.hN/QOapYB2Gz0yL5JIdUXaSNM4ChyWW', 'Kamala Khan'),
+    ('steve.rogers@example.com', '$2b$12$m.OgqGqswtUFXj3Uv1FuhObWTNwoKLj7/s/egBBH5KKUmNGSB.7mW', 'Steve Rogers')
 ON CONFLICT (email) DO NOTHING;

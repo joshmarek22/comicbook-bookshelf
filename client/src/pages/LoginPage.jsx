@@ -86,7 +86,7 @@ function LoginPage() {
         </form>
 
         <p className="mt-8 text-center text-sm text-[var(--muted)]">
-          New to Panelhaus? <a className="text-[var(--ink)] underline" href="#create-account">Create an account</a>
+          New to Panelhaus? <Link className="text-[var(--ink)] underline" to="/register">Create an account</Link>
         </p>
       </section>
     </main>

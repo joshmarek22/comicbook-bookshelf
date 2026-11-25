@@ -3,6 +3,8 @@ import express from 'express';
 import { requireAuth } from '../controller/authController.js';
 import {
   addReadingListItem,
+  addReadingListItems,
+  addReadingListVolume,
   changeReadingListStatus,
   deleteReadingListItem,
   getReadingList,
@@ -13,6 +15,12 @@ router.use(requireAuth);
 
 // GET /api/v1/users/:userId/reading-list
 router.get('/', getReadingList);
+
+// POST /api/v1/users/:userId/reading-list/bulk
+router.post('/bulk', addReadingListItems);
+
+// POST /api/v1/users/:userId/reading-list/volumes/:volumeId
+router.post('/volumes/:volumeId', addReadingListVolume);
 
 // POST /api/v1/users/:userId/reading-list
 router.post('/', addReadingListItem);

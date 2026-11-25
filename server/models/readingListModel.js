@@ -1,7 +1,8 @@
 import pool from '../config/database.js';
 
 const ITEM_COLUMNS = `
-  id, user_id, comic_vine_comic_id, title_snapshot, status, notes,
+  id, user_id, comic_vine_comic_id, title_snapshot,
+  comic_vine_volume_id, volume_title_snapshot, status, notes,
   started_at, finished_at, created_at, updated_at
 `;
 
@@ -21,25 +22,83 @@ export async function findByUserId(userId, status) {
   return rows;
 }
 
+export async function findSaveCounts(comicVineComicIds) {
+  if (comicVineComicIds.length === 0) return [];
+
+  const { rows } = await pool.query(`
+    SELECT comic_vine_comic_id, COUNT(*)::int AS save_count
+    FROM user_comic_items
+    WHERE comic_vine_comic_id = ANY($1::bigint[])
+    GROUP BY comic_vine_comic_id
+  `, [comicVineComicIds]);
+
+  return rows;
+}
+
 export async function addItem(userId, {
   comicVineComicId,
   title,
+  volumeId,
+  volumeTitle,
   status = 'want_to_read',
   notes,
 }) {
   const { rows } = await pool.query(`
     INSERT INTO user_comic_items
-      (user_id, comic_vine_comic_id, title_snapshot, status, notes,
+      (user_id, comic_vine_comic_id, title_snapshot,
+       comic_vine_volume_id, volume_title_snapshot, status, notes,
        started_at, finished_at)
     VALUES (
-      $1, $2, $3, $4, $5,
-      CASE WHEN $4 = 'reading' OR $4 = 'finished' THEN NOW() END,
-      CASE WHEN $4 = 'finished' THEN NOW() END
+      $1, $2, $3, $4, $5, $6, $7,
+      CASE WHEN $6 = 'reading' OR $6 = 'finished' THEN NOW() END,
+      CASE WHEN $6 = 'finished' THEN NOW() END
     )
     RETURNING ${ITEM_COLUMNS}
-  `, [userId, comicVineComicId, title ?? null, status, notes ?? null]);
+  `, [
+    userId,
+    comicVineComicId,
+    title ?? null,
+    volumeId ?? null,
+    volumeTitle ?? null,
+    status,
+    notes ?? null,
+  ]);
 
   return rows[0];
+}
+
+export async function addItems(userId, items) {
+  if (items.length === 0) return [];
+
+  const comicVineComicIds = items.map(({ comicVineComicId }) => comicVineComicId);
+  const titles = items.map(({ title }) => title ?? null);
+  const volumeIds = items.map(({ volumeId }) => volumeId ?? null);
+  const volumeTitles = items.map(({ volumeTitle }) => volumeTitle ?? null);
+  const { rows } = await pool.query(`
+    INSERT INTO user_comic_items (
+      user_id, comic_vine_comic_id, title_snapshot,
+      comic_vine_volume_id, volume_title_snapshot
+    )
+    SELECT $1, comic.comic_vine_comic_id, comic.title_snapshot,
+           comic.comic_vine_volume_id, comic.volume_title_snapshot
+    FROM unnest($2::bigint[], $3::text[], $4::bigint[], $5::text[])
+      AS comic(comic_vine_comic_id, title_snapshot,
+               comic_vine_volume_id, volume_title_snapshot)
+    ON CONFLICT (user_id, comic_vine_comic_id) DO UPDATE
+      SET comic_vine_volume_id = COALESCE(
+            user_comic_items.comic_vine_volume_id,
+            EXCLUDED.comic_vine_volume_id
+          ),
+          volume_title_snapshot = COALESCE(
+            user_comic_items.volume_title_snapshot,
+            EXCLUDED.volume_title_snapshot
+          )
+      WHERE user_comic_items.comic_vine_volume_id IS NULL
+        AND EXCLUDED.comic_vine_volume_id IS NOT NULL
+    RETURNING ${ITEM_COLUMNS}, (xmax = 0) AS was_added
+  `, [userId, comicVineComicIds, titles, volumeIds, volumeTitles]);
+
+  return rows;
 }
 
 export async function updateStatus(userId, itemIdOrComicVineComicId, status) {

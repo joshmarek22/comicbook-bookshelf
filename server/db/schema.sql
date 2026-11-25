@@ -81,6 +81,8 @@ CREATE TABLE IF NOT EXISTS user_comic_items (
     user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     comic_vine_comic_id BIGINT NOT NULL,
     title_snapshot TEXT,
+    comic_vine_volume_id BIGINT,
+    volume_title_snapshot TEXT,
     status TEXT NOT NULL DEFAULT 'want_to_read',
     notes TEXT,
     started_at TIMESTAMPTZ,
@@ -93,11 +95,43 @@ CREATE TABLE IF NOT EXISTS user_comic_items (
         CHECK (status IN ('want_to_read', 'reading', 'finished')),
     CONSTRAINT user_comic_items_title_not_blank
         CHECK (title_snapshot IS NULL OR btrim(title_snapshot) <> ''),
+    CONSTRAINT user_comic_items_volume_id_positive
+        CHECK (comic_vine_volume_id IS NULL OR comic_vine_volume_id > 0),
+    CONSTRAINT user_comic_items_volume_title_not_blank
+        CHECK (volume_title_snapshot IS NULL OR btrim(volume_title_snapshot) <> ''),
+    CONSTRAINT user_comic_items_volume_metadata_paired
+        CHECK ((comic_vine_volume_id IS NULL) = (volume_title_snapshot IS NULL)),
     CONSTRAINT user_comic_items_finished_date_valid
         CHECK (finished_at IS NULL OR started_at IS NULL OR finished_at >= started_at),
     CONSTRAINT user_comic_items_unique_comic_per_user
         UNIQUE (user_id, comic_vine_comic_id)
 );
+
+ALTER TABLE user_comic_items
+    ADD COLUMN IF NOT EXISTS comic_vine_volume_id BIGINT,
+    ADD COLUMN IF NOT EXISTS volume_title_snapshot TEXT;
+
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'user_comic_items_volume_id_positive') THEN
+        ALTER TABLE user_comic_items
+            ADD CONSTRAINT user_comic_items_volume_id_positive
+            CHECK (comic_vine_volume_id IS NULL OR comic_vine_volume_id > 0);
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'user_comic_items_volume_title_not_blank') THEN
+        ALTER TABLE user_comic_items
+            ADD CONSTRAINT user_comic_items_volume_title_not_blank
+            CHECK (volume_title_snapshot IS NULL OR btrim(volume_title_snapshot) <> '');
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'user_comic_items_volume_metadata_paired') THEN
+        ALTER TABLE user_comic_items
+            ADD CONSTRAINT user_comic_items_volume_metadata_paired
+            CHECK ((comic_vine_volume_id IS NULL) = (volume_title_snapshot IS NULL));
+    END IF;
+END;
+$$;
 
 COMMENT ON TABLE user_comic_items IS 'User-owned shelves containing references to Comic Vine comics.';
 

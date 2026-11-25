@@ -1,7 +1,7 @@
 import bcrypt from 'bcryptjs';
 import crypto from 'node:crypto';
 
-import { findByEmail, findById } from '../models/userModel.js';
+import { create, findByEmail, findById } from '../models/userModel.js';
 
 const COOKIE_NAME = 'panelhaus_session';
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 7;
@@ -31,6 +31,44 @@ export async function login(req, res) {
   });
 
   return res.json(toPublicUser(user));
+}
+
+export async function register(req, res) {
+  const { name, email, password, confirmPassword } = req.body ?? {};
+
+  if (!isNonBlankString(name) || !isNonBlankString(email) || !isNonBlankString(password)) {
+    return res.status(400).json({ error: 'name, email, and password are required' });
+  }
+  if (typeof confirmPassword !== 'string' || password !== confirmPassword) {
+    return res.status(400).json({ error: 'Passwords do not match' });
+  }
+  if (password.length < 8) {
+    return res.status(400).json({ error: 'Password must be at least 8 characters' });
+  }
+
+  try {
+    const passwordHash = await bcrypt.hash(password, 12);
+    const user = await create({
+      name: name.trim(),
+      email: email.trim().toLowerCase(),
+      passwordHash,
+    });
+
+    res.cookie(COOKIE_NAME, createSessionToken(user.id), {
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: SESSION_TTL_SECONDS * 1000,
+      path: '/',
+    });
+
+    return res.status(201).json(user);
+  } catch (error) {
+    if (error?.code === '23505') {
+      return res.status(409).json({ error: 'An account with that email already exists' });
+    }
+    throw error;
+  }
 }
 
 export async function getCurrentUser(req, res) {

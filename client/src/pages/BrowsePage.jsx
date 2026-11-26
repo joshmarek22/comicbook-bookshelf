@@ -1,28 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import Header from '../components/layout/Header'
 import VolumeCard from '../components/VolumeCard'
-
-function normalizeVolumeSearch(value) {
-  return value
-    .replace(/\(\s*by\s+[^)]*\)/gi, ' ')
-    .replace(/\b(?:19|20)\d{2}\b/g, ' ')
-    .replace(/[^\p{L}\p{N}]+/gu, ' ')
-    .trim()
-    .toLowerCase()
-}
-
-function getVolumeSearchScore(volume, query) {
-  const searchTitle = normalizeVolumeSearch(query)
-  const volumeTitle = normalizeVolumeSearch(volume.name || '')
-  const year = query.match(/\b(?:19|20)\d{2}\b/)?.[0]
-  let score = year && String(volume.start_year) === year ? 1000 : 0
-
-  if (volumeTitle === searchTitle) score += 100
-  else if (volumeTitle.startsWith(searchTitle)) score += 50
-  else if (volumeTitle.includes(searchTitle)) score += 25
-
-  return score
-}
+import {
+  filterAdultVolumes,
+  filterVolumesBySearch,
+  rankVolumes,
+} from '../utils/volumeSearch'
 
 function BrowsePage() {
   const [volumes, setVolumes] = useState([])
@@ -48,7 +31,7 @@ function BrowsePage() {
         return response.json()
       })
       .then((payload) => {
-        setVolumes(payload.results ?? [])
+        setVolumes(filterAdultVolumes(payload.results ?? []))
         setVisibleCount(24)
         setStatus('ready')
       })
@@ -63,17 +46,13 @@ function BrowsePage() {
   }, [query, searchVersion])
 
   const visibleVolumes = useMemo(() => {
+    const matchingVolumes = filterVolumesBySearch(volumes, query)
+
     if (sort === 'relevance') {
-      return volumes
-        .map((volume, index) => ({ volume, index }))
-        .sort((a, b) => (
-          getVolumeSearchScore(b.volume, query) - getVolumeSearchScore(a.volume, query)
-          || a.index - b.index
-        ))
-        .map(({ volume }) => volume)
+      return rankVolumes(matchingVolumes, query)
     }
 
-    return [...volumes].sort((a, b) => {
+    return matchingVolumes.sort((a, b) => {
       if (sort === 'title') return (a.name || '').localeCompare(b.name || '')
 
       const aYear = Number(a.start_year) || 0

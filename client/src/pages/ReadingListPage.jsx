@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import Header from '../components/layout/Header'
 import VolumeCard from '../components/VolumeCard'
+import { readJson, useReadingList } from '../hooks/useReadingList'
 import { groupItemsByStatus } from '../utils/readingList'
 
 const STATUS_LABELS = {
@@ -9,79 +11,29 @@ const STATUS_LABELS = {
   finished: 'Finished',
 }
 
-async function readJson(response, fallbackMessage) {
-  const payload = await response.json()
-  if (!response.ok) throw new Error(payload.error || fallbackMessage)
-  return payload
-}
-
 function getIssueTitle(item) {
   return item.title_snapshot || `Issue #${item.comic_vine_comic_id}`
 }
 
 function ReadingListPage() {
-  const [items, setItems] = useState([])
-  const [volumeDetails, setVolumeDetails] = useState({})
-  const [userId, setUserId] = useState(null)
-  const [status, setStatus] = useState('loading')
-  const [error, setError] = useState('')
-  const [detailsError, setDetailsError] = useState('')
+  const {
+    user,
+    items,
+    volumeDetails,
+    status,
+    error,
+    detailsError,
+    replaceItem,
+  } = useReadingList()
+  const userId = user?.id
+  const { hash } = useLocation()
   const [statusError, setStatusError] = useState('')
   const [updatingItemIds, setUpdatingItemIds] = useState(new Set())
 
   useEffect(() => {
-    const controller = new AbortController()
-
-    async function loadList() {
-      try {
-        const userResponse = await fetch('/api/v1/auth/me', {
-          credentials: 'include',
-          signal: controller.signal,
-        })
-        const user = await readJson(userResponse, 'Unable to load your account')
-        setUserId(user.id)
-        const listResponse = await fetch(
-          `/api/v1/users/${user.id}/reading-list`,
-          { credentials: 'include', signal: controller.signal },
-        )
-        const list = await readJson(listResponse, 'Unable to load your reading list')
-        const volumeIds = [...new Set(
-          list
-            .map((item) => item.comic_vine_volume_id)
-            .filter((id) => id != null)
-            .map(String),
-        )]
-        const detailsResults = await Promise.allSettled(volumeIds.map(async (id) => {
-          const response = await fetch(`/api/v1/comics/volumes/${id}`, {
-            signal: controller.signal,
-            cache: 'no-store',
-          })
-          return readJson(response, 'Unable to load series details')
-        }))
-        if (controller.signal.aborted) return
-
-        const details = {}
-        let failedDetails = false
-        detailsResults.forEach((result, index) => {
-          if (result.status === 'fulfilled') details[volumeIds[index]] = result.value
-          else if (result.reason?.name !== 'AbortError') failedDetails = true
-        })
-
-        setItems(list)
-        setVolumeDetails(details)
-        setDetailsError(failedDetails ? 'Some series artwork or details could not be loaded.' : '')
-        setStatus('ready')
-      } catch (requestError) {
-        if (requestError.name !== 'AbortError') {
-          setError(requestError.message)
-          setStatus('error')
-        }
-      }
-    }
-
-    loadList()
-    return () => controller.abort()
-  }, [])
+    if (status !== 'ready' || !hash) return
+    document.getElementById(decodeURIComponent(hash.slice(1)))?.scrollIntoView()
+  }, [status, hash])
 
   const sections = groupItemsByStatus(items)
 
@@ -101,9 +53,7 @@ function ReadingListPage() {
         },
       )
       const updatedItem = await readJson(response, 'Unable to update reading status')
-      setItems((current) => current.map((currentItem) => (
-        currentItem.id === updatedItem.id ? updatedItem : currentItem
-      )))
+      replaceItem(updatedItem)
     } catch (requestError) {
       setStatusError(requestError.message)
     } finally {
@@ -169,7 +119,7 @@ function ReadingListPage() {
           const ungroupedGroup = section.groups.find((group) => group.id == null)
 
           return (
-            <section className="mt-10 first:mt-0" key={section.status}>
+            <section className="mt-10 scroll-mt-6 first:mt-0" id={section.status} key={section.status}>
               <div className="mb-4 flex flex-wrap items-baseline justify-between gap-3 border-b border-[var(--line)] pb-3">
                 <h2 className="m-0 text-xl">{section.label}</h2>
                 <p className="m-0 text-sm text-[var(--muted)]">

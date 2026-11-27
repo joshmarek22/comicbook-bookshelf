@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom'
-import { upNext } from '../../data/dashboard'
 
-function RightColumn() {
+function RightColumn({ upNext, isLoading }) {
   return (
     <aside className="grid content-start gap-4 md:col-start-2 md:grid-cols-2 lg:col-start-auto lg:row-auto lg:block">
       <section className="border border-[var(--line)] p-4">
@@ -13,7 +12,16 @@ function RightColumn() {
       </section>
       <section className="grid gap-4 border border-[var(--line)] p-4">
         <h2 className="mb-0 text-[13px] tracking-[1px]">UP NEXT</h2>
-        {upNext.map((title) => <Link className="underline" to="/reading-orders" key={title}>{title}</Link>)}
+        {isLoading && <p className="m-0 text-sm text-[var(--muted)]">Loading...</p>}
+        {!isLoading && upNext.length === 0 && (
+          <p className="m-0 text-sm text-[var(--muted)]">Start a series to see what's next.</p>
+        )}
+        {upNext.map(({ key, volumeId, seriesTitle, issueTitle }) => (
+          <Link className="min-w-0" to={`/browse/volumes/${volumeId}`} key={key}>
+            <span className="block truncate underline">{issueTitle}</span>
+            <small className="block truncate text-xs text-[var(--muted)]">{seriesTitle}</small>
+          </Link>
+        ))}
       </section>
     </aside>
   )

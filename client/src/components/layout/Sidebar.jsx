@@ -1,16 +1,15 @@
 import { Link } from 'react-router-dom'
-import { shelves } from '../../data/dashboard'
 
-function Sidebar() {
+function Sidebar({ shelves, isLoading }) {
   return (
     <aside className="mb-6 grid grid-cols-2 gap-3 md:mb-0 md:block">
       <section className="border border-[var(--line)] p-4">
         <h2 className="mb-4 text-[13px] tracking-[1px]">MY SHELVES</h2>
         <ul className="m-0 list-none p-0">
-          {shelves.map(([name, count]) => (
-            <li className="mb-4 flex justify-between last:mb-0" key={name}>
-              <Link className="underline" to={`/shelves/${name.toLowerCase().replaceAll(' ', '-')}`}>{name}</Link>
-              <span>{count}</span>
+          {shelves.map(({ status, label, count }) => (
+            <li className="mb-4 flex justify-between last:mb-0" key={status}>
+              <Link className="underline" to={`/lists#${status}`}>{label}</Link>
+              <span aria-label={`${count} series`}>{isLoading ? '–' : count}</span>
             </li>
           ))}
         </ul>
